@@ -1,8 +1,7 @@
 {
     "require": {
         "rakibtg/sleekdb": "^1.5",
-        "adhocore/cli": "^0.8.3",
-        "eden/sqlite": "^4.0"
+        "adhocore/cli": "^0.8.3"
     },
     "autoload": {
 	    "psr-4": {
