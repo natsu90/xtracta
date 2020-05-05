@@ -10,6 +10,7 @@
 `php cmd.php seed`; Import invoice data
 
 `php cmd.php import`; Import supplier data
+> `php cmd.php import 100000`; Import supplier data with additional fake data
 
 `php cmd.php read`; Display available words & detected supplier
 
@@ -17,7 +18,7 @@
 
 ````
 > php cmd.php read
-
+Total suppliers: 1000092
 +---------------------------------------------------------------------------------+
 | Words                                                                           |
 +---------------------------------------------------------------------------------+

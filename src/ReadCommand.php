@@ -7,6 +7,7 @@ use Ahc\Cli\IO\Interactor;
 use SleekDB\SleekDB as DB;
 use Ahc\Cli\Output\Writer;
 use Ahc\Cli\Output\Color;
+use SQLite3;
 
 class ReadCommand extends Command {
 
@@ -16,7 +17,7 @@ class ReadCommand extends Command {
 
 		$this->invoice = DB::store('invoice', __DIR__ . '/../db');
 
-		$this->supplier = DB::store('supplier', __DIR__ . '/../db');
+		$this->db = new SQLite3(__DIR__ . '/../db.sqlite');
     }
 
     public function interact(Interactor $io)
@@ -26,15 +27,21 @@ class ReadCommand extends Command {
 
     public function execute()
     {
+    	error_reporting(E_ALL ^ E_WARNING);
+
     	$color = new Color;
     	// check if invoice not empty
     	if (!$this->invoice->fetch()) {
     		echo $color->error("No invoice data!\n"); exit;
     	}
     	// check if supplier not empty
-    	if (!$this->supplier->fetch()) {
+    	$rows = $this->db->query("SELECT COUNT(*) as count FROM supplier");
+    	if (!$rows) {
     		echo $color->error("No supplier data!\n"); exit;
     	}
+
+		$row = $rows->fetchArray();
+		echo "Total suppliers: ". $row['count'] ."\n";
     	// fetch data
     	$invoice_data = $this->invoice
     		->orderBy('asc', 'line_id')
@@ -66,13 +73,15 @@ class ReadCommand extends Command {
 
     		$words_data[] = $words;
     	}
+
     	// fetch query where_in
-    	$suppliers = $this->supplier->in('supplier_name', $words_data)->fetch();
+    	$res = $this->db->query('SELECT * FROM supplier WHERE supplier_name IN ("'.implode('","', $words_data).'")');
     	// prepare supplier data to display in table
     	$suppliers_data = [];
-    	foreach($suppliers as $data) {
-    		$suppliers_data[] = ['suppliers' => $data['supplier_name']];
-    	}
+    	while($data = $res->fetchArray()) {
+
+		    $suppliers_data[] = ['suppliers' => $data['supplier_name']];
+		}
 
     	$writer = new Writer;
 
@@ -80,5 +89,11 @@ class ReadCommand extends Command {
     	$writer->table($suppliers_data);
 
     	echo $color->info("Reading completed!\n");
+    }
+
+    public function __destruct()
+    {
+        // close the connection
+        $this->db->close();
     }
 }
